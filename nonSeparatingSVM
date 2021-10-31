@@ -1,0 +1,68 @@
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+import matplotlib.pyplot as plt
+
+iris=load_iris()
+X = iris["data"][:,(2,3)]
+y = iris["target"]
+y = np.array([1 if i == 2 else -1 for i in y])
+
+scaler = StandardScaler()
+svm_clf1 = LinearSVC(C=1)
+svm_clf2 = LinearSVC(C=100)
+
+scaled_svm_clf1 = Pipeline((('ss',scaler),('svm1',svm_clf1)))
+scaled_svm_clf2 = Pipeline((('ss',scaler),('svm2',svm_clf2)))
+scaled_svm_clf1.fit(X,y)
+scaled_svm_clf2.fit(X,y)
+#归一化
+b1 = svm_clf1.decision_function([-scaler.mean_ / scaler.scale_])
+b2 = svm_clf2.decision_function([-scaler.mean_ / scaler.scale_])
+w1 = svm_clf1.coef_[0] / scaler.scale_
+w2 = svm_clf2.coef_[0] / scaler.scale_
+#升维
+svm_clf1.intercept_ = np.array([b1])
+svm_clf2.intercept_ = np.array([b2])
+svm_clf1.coef_ = np.array([w1])
+svm_clf2.coef_ = np.array([w2])
+
+
+def plot_svm_decision_boundary(svm_clf, xmin, xmax):
+    w = svm_clf.coef_[0]  # 每一个特征被分配的权值，只在线性核中有效
+    b = svm_clf.intercept_[0]  # 决策函数中的偏置常量
+    # print(w)
+    x0 = np.linspace(xmin, xmax, 200)
+    decision_boundary = (- w[0] * x0 - b) / w[1]  # 决策边界:y = wx + b
+    margin = 1 / w[1]
+    gutter_up = decision_boundary + margin
+    gutter_down = decision_boundary - margin
+    plt.plot(x0, decision_boundary, 'k')  # 决策边界
+    plt.plot(x0, gutter_up, 'k--')  # 支持向量所在边界
+    plt.plot(x0, gutter_down, 'k--')  # # 支持向量所在边界
+
+
+plt.figure(figsize=(14,4))
+plt.subplot(121)
+plt.title("C = 1")
+plt.plot(X[:, 0][y==1], X[:, 1][y==1], "b.", label="Iris-Virginica")
+plt.plot(X[:, 0][y==-1], X[:, 1][y==-1], "r.", label="Iris-Versicolor")
+plot_svm_decision_boundary(svm_clf1, 4, 6)
+plt.xlabel("Petal length")
+plt.ylabel("Petal width")
+plt.legend()
+plt.axis([4, 6, 0.8, 2.8])
+
+
+plt.subplot(122)
+plt.title("C = 100")
+plt.plot(X[:, 0][y==1], X[:, 1][y==1], "b.")
+plt.plot(X[:, 0][y==-1], X[:, 1][y==-1], "r.")
+plot_svm_decision_boundary(svm_clf2, 4, 6)
+plt.xlabel("Petal length")
+plt.ylabel("Petal width")
+plt.axis([4, 6, 0.8, 2.8])
+
+plt.show()
