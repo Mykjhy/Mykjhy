@@ -1,0 +1,50 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split 
+from sklearn.svm import SVR, SVC
+from sklearn.metrics import mean_squared_error
+
+iris=load_iris()
+X = iris.data
+y = iris.target
+X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.2,random_state=0)
+
+X_svr = X_train[:, 2]  #training set
+y_svr = X_train[:, 3]
+
+
+X_svr_t = X_test[:, 2]  #test set
+y_svr_t = X_test[:, 3]
+
+n_set_plt = plt.scatter(X_svr, y_svr, c='b', label='training data')
+plt.xlabel(features[2])
+plt.ylabel(features[3])
+plt.title('Iris Data Set')
+plt.show()
+
+svr_lin = SVR(kernel='linear', C=1000, epsilon=0.2)
+y_linear = svr_lin.fit(X_svr.reshape(-1, 1), y_svr).predict(X_svr.reshape(-1, 1))
+plt.scatter(X_svr, y_svr, color='b', label='training data')
+plt.plot(X_svr, y_linear, color='k', label='regression line')
+plt.xlabel(features[2])
+plt.ylabel(features[3])
+plt.title('Iris Data Set - Linear SVR')
+plt.show()
+
+def plot_svm_regression(svm_reg, X, y, axes):
+    x1s = np.linspace(axes[0], axes[1], 100).reshape(100, 1)
+    y_pred = svm_reg.predict(x1s)
+    plt.plot(x1s, y_pred, "k-", linewidth=2, label=r"$\hat{y}$")
+    plt.plot(x1s, y_pred + svm_reg.epsilon, "k--", label=r"$\hat{y} + \epsilon$")
+    plt.plot(x1s, y_pred - svm_reg.epsilon, "k--", label=r"$\hat{y} - \epsilon$")
+    plt.plot(X, y, "bo")
+    plt.axis(axes)
+
+plot_svm_regression(svr_linear, X_svr, y_svr, [1, 7, 0, 2.5])
+plt.title(r"Iris Data Set - Linear SVR, $\epsilon = {}$".format(svr_linear.epsilon))
+plt.xlabel(features[2])
+plt.ylabel(features[3])
+plt.show()
+
+mean_squared_error(svr_linear.predict(X_svr_t.reshape(-1, 1)), y_svr_t)
